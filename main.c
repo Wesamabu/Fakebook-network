@@ -1,6 +1,7 @@
 #include "fakebook.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main() {
     Network *net = createNetwork();
@@ -23,6 +24,10 @@ int main() {
         getchar(); // clear newline
         switch (choice) {
             case 1:
+                if (net->numUsers >= net->capacity) {
+                    printf("Network is full (capacity %d). Cannot add more users.\n", net->capacity);
+                    break;
+                }
                 printf("Enter name: ");
                 fgets(name, sizeof(name), stdin);
                 name[strcspn(name, "\n")] = '\0';
@@ -81,3 +86,4 @@ int main() {
         }
     }
 }
+
