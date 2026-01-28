@@ -6,23 +6,35 @@
 #define initialCapacity 5
 
 // make a new network and set it up
-Network *createNetwork(){
+Network *createNetwork() {
     Network *net = malloc(sizeof(Network));
-    net->users =  malloc(sizeof(User) * initialCapacity); 
+    if (!net) return NULL;
+    net->users = malloc(sizeof(User*) * initialCapacity);
+    if (!net->users) {
+        free(net);
+        return NULL;
+    }
     net->numUsers = 0;
     net->capacity = initialCapacity;
     return net;
 }
 
 // make a new user and add basic info
-User *createUser(Network *net, const char *name){
-    User * newUser = malloc(sizeof(User));
+User *createUser(Network *net, const char *name) {
+    User *newUser = malloc(sizeof(User));
+    if (!newUser) return NULL;
     newUser->friendCapacity = net->capacity;
-    strcpy(newUser->name,name);
-    newUser->friends = malloc(sizeof(User) * net->capacity);
+    newUser->friends = malloc(sizeof(User*) * newUser->friendCapacity);
+    if (!newUser->friends) {
+        free(newUser);
+        return NULL;
+    }
     newUser->id = net->numUsers + 1;
     newUser->numFriends = 0;
     newUser->posts = NULL;
+    strncpy(newUser->name, name, sizeof(newUser->name) - 1);
+    newUser->name[sizeof(newUser->name) - 1] = '\0';
+    return newUser;
 }
 
 // connect two users together as friends
@@ -44,32 +56,33 @@ void addPost(User *user, const char *content){
 }
 
 // show all of a user’s friends
-void showFriends(User *user){
-    if(user->numFriends == 0){
-        printf("No friends yet, but you got it!");
+void showFriends(User *user) {
+    if (!user || user->numFriends == 0) {
+        printf("No friends yet, but you got it!\n");
+        return;
     }
-    int i = user->numFriends - 1;
     printf("Friends list: ");
-    while(i >= 0){
-        printf("%s, ", user->friends[i]->name);
-        i--;
+    for (int i = 0; i < user->numFriends; i++) {
+        printf("%s", user->friends[i]->name);
+        if (i != user->numFriends - 1) printf(", ");
     }
+    printf("\n");
 }
 
 // show all posts for a user
-void showFeed(User *user){
-    if(user->posts == NULL){
-        printf("No posts to show");
+void showFeed(User *user) {
+    if (!user || user->posts == NULL) {
+        printf("No posts to show\n");
+        return;
     }
-    else{
-        printf("Posts list: ");
-        Post *current = user->posts;
-        while(current != NULL){
-            printf("%d - %s\n",user->posts->id, user->posts->content);
-            current = user->posts->next;
-        }
+    printf("Posts list:\n");
+    Post *current = user->posts;
+    while (current != NULL) {
+        printf("%d - %s\n", current->id, current->content);
+        current = current->next;
     }
 }
+
 
 // suggest new people to connect with
 void suggestFriends(User *user){
@@ -146,6 +159,7 @@ void freeNetwork(Network *net){
     free(net->users);
     free(net);
 }
+
 
 
 
