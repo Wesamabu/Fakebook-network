@@ -37,23 +37,43 @@ User *createUser(Network *net, const char *name) {
     return newUser;
 }
 
+// Check if users are already friends or not before trying to connect
+static int isAlreadyFriend(User *u, User *candidate) {
+    for (int i = 0; i < u->numFriends; i++) {
+        if (u->friends[i] == candidate) return 1;
+    }
+    return 0;
+}
+
 // connect two users together as friends
-void addFriend(User *u1, User *u2){
-    u1->friends[u1->numFriends + 1] = u2;
-    u2->friends[u2->numFriends + 1] = u1;
+void addFriend(User *u1, User *u2) {
+    if (!u1 || !u2 || u1 == u2) return;
+    if (isAlreadyFriend(u1, u2) || isAlreadyFriend(u2, u1)) return;
+    if (u1->numFriends >= u1->friendCapacity) return;
+    if (u2->numFriends >= u2->friendCapacity) return;
+    u1->friends[u1->numFriends] = u2;
+    u1->numFriends++;
+    u2->friends[u2->numFriends] = u1;
+    u2->numFriends++;
 }
 
 // make a new post for a user
-void addPost(User *user, const char *content){
+void addPost(User *user, const char *content) {
+    if (!user || !content) return;
     Post *newPost = malloc(sizeof(Post));
+    if (!newPost) return;
     newPost->content = malloc(strlen(content) + 1);
+    if (!newPost->content) {
+        free(newPost);
+        return;
+    }
     strcpy(newPost->content, content);
-    int post_count = 1;
-    newPost->id = post_count;
-    post_count++;
-    newPost->next = user->posts->next;
+    static int post_count = 1;   // persists across calls
+    newPost->id = post_count++;
+    newPost->next = user->posts; // safe even if posts is NULL
     user->posts = newPost;
 }
+
 
 // show all of a user’s friends
 void showFriends(User *user) {
@@ -159,6 +179,7 @@ void freeNetwork(Network *net){
     free(net->users);
     free(net);
 }
+
 
 
 
